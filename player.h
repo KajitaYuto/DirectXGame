@@ -21,8 +21,13 @@ public:
 	/// •`‰æ
 	/// </summary>
 	void Draw(ViewProjection viewProjection);
-
+	
 private:
+
+	/// <summary>
+	/// ˆÚ“®
+	/// </summary>
+	void Move();
 
 	Input* input_ = nullptr;
 	DebugText* debugText_ = nullptr;
