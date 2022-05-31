@@ -20,7 +20,7 @@ public:
 	/// <summary>
 	/// •`‰æ
 	/// </summary>
-	void Draw();
+	void Draw(ViewProjection viewProjection);
 
 private:
 

@@ -13,10 +13,12 @@ void Player::Initialize(Model* model, uint32_t textureHandle){
 	worldTransform_.Initialize();
 }
 
-void Player::Update()
-{
+void Player::Update(){
+
+
 }
 
-void Player::Draw()
-{
+void Player::Draw(ViewProjection viewProjection){
+	//3Dƒ‚ƒfƒ‹‚Ì•`‰æ
+	model_->Draw(worldTransform_, viewProjection, textureHandle_);
 }
