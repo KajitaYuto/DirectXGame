@@ -16,7 +16,7 @@ void Player::Initialize(Model* model, uint32_t textureHandle) {
 void Player::Update() {
 	Move();
 
-	debugText_->SetPos(50, 50);
+	debugText_->SetPos(50, 70);
 	debugText_->Printf("Player:(%f,%f,%f)", worldTransform_.translation_.x
 		, worldTransform_.translation_.y, worldTransform_.translation_.z);
 }
@@ -32,14 +32,29 @@ void Player::Move() {
 
 	//押した方向で移動ベクトルを変更
 	if (input_->PushKey(DIK_A)) {
-		move = { -moveSpeed, 0, 0 };
+		worldTransform_.translation_.x -= move.x;
 	}
-	else if (input_->PushKey(DIK_D)) {
-		move = { moveSpeed, 0, 0 };
+	if (input_->PushKey(DIK_D)) {
+		worldTransform_.translation_.x += move.x;
+	}
+	if (input_->PushKey(DIK_W)) {
+		worldTransform_.translation_.y += move.y;
+	}
+	if (input_->PushKey(DIK_S)) {
+		worldTransform_.translation_.y -= move.y;
 	}
 
-	worldTransform_.translation_.x += move.x;
-	worldTransform_.translation_.y += move.y;
-	worldTransform_.translation_.z += move.z;
+	//行列更新
+	//平行移動行列を宣言
+	Matrix4 matTrans = MathUtility::Matrix4Identity();
+	matTrans.m[3][0] = worldTransform_.translation_.x;
+	matTrans.m[3][1] = worldTransform_.translation_.y;
+	matTrans.m[3][2] = worldTransform_.translation_.z;
+	//ワールド行列
+	worldTransform_.matWorld_ = MathUtility::Matrix4Identity();
+	//ワールド行列に平行移動行列を掛ける
+	worldTransform_.matWorld_ *= matTrans;
+	//ワールド行列の転送
+	worldTransform_.TransferMatrix();
 
 }

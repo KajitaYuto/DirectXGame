@@ -43,13 +43,13 @@ void GameScene::Update() {
 	//視点の移動速さ
 	const float kEyeSpeed = 0.2f;
 
-	//押した方向で移動ベクトルを変更
-	if (input_->PushKey(DIK_W)) {
-		move = { 0,0,kEyeSpeed };
-	}
-	else if (input_->PushKey(DIK_S)) {
-		move = { 0,0,-kEyeSpeed };
-	}
+	////押した方向で移動ベクトルを変更
+	//if (input_->PushKey(DIK_W)) {
+	//	move = { 0,0,kEyeSpeed };
+	//}
+	//else if (input_->PushKey(DIK_S)) {
+	//	move = { 0,0,-kEyeSpeed };
+	//}
 
 	//視点移動(ベクトルの加算)
 	viewProjection_.eye += move;
@@ -91,7 +91,7 @@ void GameScene::Draw() {
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
 	//3Dモデル描画
-	player_->Draw();
+	player_->Draw(viewProjection_);
 
 	////ライン描画が参照するビュープロジェクションを指定する(アドレス渡し)
 	//PrimitiveDrawer::GetInstance()->DrawLine3d();
