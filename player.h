@@ -4,6 +4,7 @@
 #include "assert.h"
 #include "DebugText.h"
 #include "Input.h"
+#include "playerBullet.h"
 
 class Player {
 public:
@@ -32,6 +33,12 @@ private:
 	/// âÒì]
 	/// </summary>
 	void Rotate();
+	/// <summary>
+	/// çUåÇ
+	/// </summary>
+	void Attack();
+
+	PlayerBullet* bullet_ = nullptr;
 
 	Input* input_ = nullptr;
 	DebugText* debugText_ = nullptr;
