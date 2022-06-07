@@ -4,6 +4,7 @@ void Player::Initialize(Model* model, uint32_t textureHandle) {
 	//NULLポインタチェック
 	assert(model);
 	this->model_ = model;
+	textureHandle_ = textureHandle;
 
 	//シングルトンインスタンスを取得する
 	input_ = Input::GetInstance();
@@ -56,5 +57,17 @@ void Player::Move() {
 	worldTransform_.matWorld_ *= matTrans;
 	//ワールド行列の転送
 	worldTransform_.TransferMatrix();
+
+}
+
+void Player::Rotate(){
+	const float kRotSpeed = 0.05f;
+
+	if (input_->PushKey(DIK_U)) {
+		worldTransform_.rotation_.y -= kRotSpeed;
+	}
+	if (input_->PushKey(DIK_I)) {
+		worldTransform_.rotation_.y += kRotSpeed;
+	}
 
 }

@@ -28,6 +28,10 @@ private:
 	/// ˆÚ“®
 	/// </summary>
 	void Move();
+	/// <summary>
+	/// ‰ñ“]
+	/// </summary>
+	void Rotate();
 
 	Input* input_ = nullptr;
 	DebugText* debugText_ = nullptr;
