@@ -1,9 +1,10 @@
 #include "playerBullet.h"
 
-void PlayerBullet::Initialize(Model* model, const Vector3& position) {
+void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vector3& velocity) {
 	//NULLポインタチェック
 	assert(model);
 	model_ = model;
+	velocity_ = velocity;
 	textureHandle_ = TextureManager::Load("black.jpg");
 
 	//ワールド変換の初期化
@@ -12,6 +13,9 @@ void PlayerBullet::Initialize(Model* model, const Vector3& position) {
 }
 
 void PlayerBullet::Update() {
+	//座標を移動させる(1フレーム分の移動量を足しこむ)
+	worldTransform_.translation_ += velocity_;
+
 	Matrix4 matScale = MathUtility::Matrix4Identity();
 	matScale.m[0][0]=worldTransform_.scale_.x;
 	matScale.m[1][1]=worldTransform_.scale_.y;
@@ -49,6 +53,11 @@ void PlayerBullet::Update() {
 	worldTransform_.matWorld_ *= matTrans;
 	//ワールド行列の転送
 	worldTransform_.TransferMatrix();
+
+	//時間経過でデス
+	if (--deathTimer_ <= 0) {
+		isDead_ = true;
+	}
 }
 
 void PlayerBullet::Draw(const ViewProjection& viewProjection){

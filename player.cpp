@@ -15,6 +15,11 @@ void Player::Initialize(Model* model, uint32_t textureHandle) {
 }
 
 void Player::Update() {
+	//デスフラグの立った弾を削除
+	bullets_.remove_if([](std::unique_ptr<PlayerBullet>& bullet) {
+		return bullet->IsDead();
+		});
+
 	//ワールド行列
 	worldTransform_.matWorld_ = MathUtility::Matrix4Identity();
 	Rotate();
@@ -60,6 +65,16 @@ void Player::Move() {
 		worldTransform_.translation_.y -= moveSpeed;
 	}
 
+	//移動限界座標
+	const float kMoveLimitX = 35;
+	const float kMoveLimitY = 18;
+
+	//範囲を超えない処理
+	worldTransform_.translation_.x=max(worldTransform_.translation_.x,-kMoveLimitX);
+	worldTransform_.translation_.x=min(worldTransform_.translation_.x,+kMoveLimitX);
+	worldTransform_.translation_.y=max(worldTransform_.translation_.y,-kMoveLimitY);
+	worldTransform_.translation_.y=min(worldTransform_.translation_.y,+kMoveLimitY);
+
 	//行列更新
 	//平行移動行列を宣言
 	Matrix4 matTrans = MathUtility::Matrix4Identity();
@@ -73,10 +88,10 @@ void Player::Move() {
 void Player::Rotate() {
 	const float kRotSpeed = 0.05f;
 
-	if (input_->PushKey(DIK_U)) {
+	if (input_->PushKey(DIK_LEFT)) {
 		worldTransform_.rotation_.y -= kRotSpeed;
 	}
-	if (input_->PushKey(DIK_I)) {
+	if (input_->PushKey(DIK_RIGHT)) {
 		worldTransform_.rotation_.y += kRotSpeed;
 	}
 	Matrix4 matRotY = MathUtility::Matrix4Identity();
@@ -89,10 +104,17 @@ void Player::Rotate() {
 }
 
 void Player::Attack() {
-	if (input_->PushKey(DIK_SPACE)) {
+	if (input_->TriggerKey(DIK_SPACE)) {
+		//弾の速度
+		const float kBulletSpeed = 1.0f;
+		Vector3 velocity(0, 0, kBulletSpeed);
+
+		//速度ベクトルを自機の向きに合わせて回転させる
+		velocity = MathUtility::Vector3TransformNormal(velocity, worldTransform_.matWorld_);
+
 		//弾を生成し、初期化
 		std::unique_ptr<PlayerBullet>newBullet = std::make_unique<PlayerBullet>();
-		newBullet->Initialize(model_, worldTransform_.translation_);
+		newBullet->Initialize(model_, worldTransform_.translation_,velocity);
 
 		//弾を登録する
 		bullets_.push_back(std::move(newBullet));
