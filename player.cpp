@@ -1,4 +1,4 @@
-#include "player.h"
+#include "Player.h"
 
 void Player::Initialize(Model* model, uint32_t textureHandle) {
 	//NULLポインタチェック
@@ -25,8 +25,7 @@ void Player::Update() {
 	Rotate();
 	Move();
 	
-	//ワールド行列の転送
-	worldTransform_.TransferMatrix();
+	worldTransform_.Transform();
 
 	//キャラクター攻撃処理
 	Attack();
@@ -74,15 +73,6 @@ void Player::Move() {
 	worldTransform_.translation_.x=min(worldTransform_.translation_.x,+kMoveLimitX);
 	worldTransform_.translation_.y=max(worldTransform_.translation_.y,-kMoveLimitY);
 	worldTransform_.translation_.y=min(worldTransform_.translation_.y,+kMoveLimitY);
-
-	//行列更新
-	//平行移動行列を宣言
-	Matrix4 matTrans = MathUtility::Matrix4Identity();
-	matTrans.m[3][0] = worldTransform_.translation_.x;
-	matTrans.m[3][1] = worldTransform_.translation_.y;
-	matTrans.m[3][2] = worldTransform_.translation_.z;
-
-	worldTransform_.matWorld_ *= matTrans;
 }
 
 void Player::Rotate() {
@@ -94,13 +84,6 @@ void Player::Rotate() {
 	if (input_->PushKey(DIK_RIGHT)) {
 		worldTransform_.rotation_.y += kRotSpeed;
 	}
-	Matrix4 matRotY = MathUtility::Matrix4Identity();
-	matRotY.m[0][0] = cosf(worldTransform_.rotation_.y);
-	matRotY.m[0][2] = -sinf(worldTransform_.rotation_.y);
-	matRotY.m[2][0] = sinf(worldTransform_.rotation_.y);
-	matRotY.m[2][2] = cosf(worldTransform_.rotation_.y);
-
-	worldTransform_.matWorld_ *= matRotY;
 }
 
 void Player::Attack() {

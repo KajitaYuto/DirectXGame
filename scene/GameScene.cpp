@@ -7,7 +7,7 @@
 GameScene::GameScene() {}
 
 GameScene::~GameScene() {
-	delete player_;
+	delete debugCamera_;
 }
 
 void GameScene::Initialize() {
@@ -18,14 +18,23 @@ void GameScene::Initialize() {
 	debugText_ = DebugText::GetInstance();
 
 	// ファイル名を指定してテクスチャを読み込み
-	textureHandle_ = TextureManager::Load("mario.jpg");
+	pTextureHandle_ = TextureManager::Load("mario.jpg");
+	eTextureHandle_ = TextureManager::Load("bakuhatsu4.png");
 	// 3Dモデルの生成
 	model_ = Model::Create();
 
 	//自キャラの生成
-	player_ = new Player();
+	player_ = std::make_unique<Player>();
 	//自キャラの初期化
-	player_->Initialize(model_,textureHandle_);
+	player_->Initialize(model_,pTextureHandle_);
+
+	//敵キャラの生成
+	enemy_ = std::make_unique<Enemy>();
+	//敵キャラの初期化
+	enemy_->Initialize(model_, eTextureHandle_);
+
+	//デバッグカメラの生成
+	debugCamera_ = new DebugCamera(1280, 720);
 
 	//ビュープロジェクションの初期化
 	viewProjection_.Initialize();
@@ -43,25 +52,37 @@ void GameScene::Update() {
 	//視点の移動速さ
 	const float kEyeSpeed = 0.2f;
 
-	////押した方向で移動ベクトルを変更
-	//if (input_->PushKey(DIK_W)) {
-	//	move = { 0,0,kEyeSpeed };
-	//}
-	//else if (input_->PushKey(DIK_S)) {
-	//	move = { 0,0,-kEyeSpeed };
-	//}
-
 	//視点移動(ベクトルの加算)
 	viewProjection_.eye += move;
-	//行列の再計算
-	viewProjection_.UpdateMatrix();
 
-	//自キャラの更新
-	player_->Update();
+#ifdef _DEBUG
+	if (input_->TriggerKey(DIK_P)) {
+		isDebugCameraActive_ = !isDebugCameraActive_;
+	}
+#endif
+
+	//カメラの処理
+	if (isDebugCameraActive_) {
+		debugCamera_->Update();
+		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
+		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
+		//転送
+		viewProjection_.TransferMatrix();
+	}
+	else {
+		//行列の再計算
+		viewProjection_.UpdateMatrix();
+		//転送
+		viewProjection_.TransferMatrix();
+	}
 
 	//デバッグ用表示
 	debugText_->SetPos(50, 50);
 	debugText_->Printf("eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
+
+	//キャラの更新
+	player_->Update();
+	if (enemy_ != nullptr)enemy_->Update();
 }
 
 void GameScene::Draw() {
@@ -92,6 +113,7 @@ void GameScene::Draw() {
 	/// </summary>
 	//3Dモデル描画
 	player_->Draw(viewProjection_);
+	if(enemy_!=nullptr)enemy_->Draw(viewProjection_);
 
 	////ライン描画が参照するビュープロジェクションを指定する(アドレス渡し)
 	//PrimitiveDrawer::GetInstance()->DrawLine3d();

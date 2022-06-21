@@ -4,11 +4,10 @@
 #include "assert.h"
 #include "DebugText.h"
 #include "Input.h"
-#include "PlayerBullet.h"
 #include <memory>
 #include <list>
 
-class Player {
+class Enemy {
 public:
 	/// <summary>
 	/// èâä˙âª
@@ -24,7 +23,7 @@ public:
 	/// ï`âÊ
 	/// </summary>
 	void Draw(ViewProjection viewProjection);
-	
+
 private:
 
 	/// <summary>
@@ -40,7 +39,7 @@ private:
 	/// </summary>
 	void Attack();
 
-	std::list<std::unique_ptr<PlayerBullet>> bullets_;
+	/*std::list<std::unique_ptr<PlayerBullet>> bullets_;*/
 
 	Input* input_ = nullptr;
 	DebugText* debugText_ = nullptr;

@@ -1,7 +1,9 @@
 ﻿#pragma once
 
+#include "MathUtility.h"
 #include "Vector3.h"
 #include "Matrix4.h"
+#include "corecrt_math.h"
 #include <d3d12.h>
 #include <wrl.h>
 
@@ -46,4 +48,6 @@ struct WorldTransform {
 	/// </summary>
 	void TransferMatrix();
 
+
+	void Transform();
 };
