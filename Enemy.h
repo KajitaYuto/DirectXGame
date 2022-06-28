@@ -7,6 +7,12 @@
 #include <memory>
 #include <list>
 
+//行動フェーズ
+enum class Phase {
+	Approach,	//接近する
+	Leave,		//離脱する
+};
+
 class Enemy {
 public:
 	/// <summary>
@@ -39,6 +45,9 @@ private:
 	/// </summary>
 	void Attack();
 
+	void Approach();
+	void Leave();
+
 	/*std::list<std::unique_ptr<PlayerBullet>> bullets_;*/
 
 	Input* input_ = nullptr;
@@ -50,4 +59,6 @@ private:
 	Model* model_ = nullptr;
 	//テクスチャハンドル
 	uint32_t textureHandle_ = 0u;
+	//フェーズ
+	Phase phase_ = Phase::Approach;
 };

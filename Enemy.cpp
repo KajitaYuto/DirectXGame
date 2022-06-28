@@ -13,7 +13,7 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle) {
 	
 	//ワールド変換の初期化
 	worldTransform_.Initialize();
-	worldTransform_.translation_.y = 2.0f;
+	worldTransform_.translation_ = {0,2,50};
 }
 
 void Enemy::Update() {
@@ -50,10 +50,15 @@ void Enemy::Draw(ViewProjection viewProjection) {
 }
 
 void Enemy::Move() {
-	float moveSpeed = 0.2f;
-
-	//移動処理
-	worldTransform_.translation_.z -=moveSpeed;
+	switch (phase_) {
+	case Phase::Approach:
+	default:
+		Approach();
+		break;
+	case Phase::Leave:
+		Leave();
+		break;
+	}
 }
 
 void Enemy::Rotate() {
@@ -84,4 +89,18 @@ void Enemy::Attack() {
 	//	bullets_.push_back(std::move(newBullet));
 
 	//}
+}
+
+void Enemy::Approach(){
+	//移動(ベクトルを加算)
+	worldTransform_.translation_ += Vector3(0, 0, -0.25f);
+	//規定の位置に到達したら離脱
+	if (worldTransform_.translation_.z < 0.0f) {
+		phase_ = Phase::Leave;
+	}
+}
+
+void Enemy::Leave(){
+	//移動(ベクトルを加算)
+	worldTransform_.translation_ += Vector3(-0.1f, 0.1f, -0.1f);
 }
