@@ -1,4 +1,6 @@
 #include "Enemy.h"
+#include "Player.h"
+using namespace MathUtility;
 
 void Enemy::Initialize(Model* model, uint32_t textureHandle) {
 	//NULLポインタチェック
@@ -10,10 +12,10 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle) {
 	input_ = Input::GetInstance();
 	debugText_ = DebugText::GetInstance();
 
-	
+
 	//ワールド変換の初期化
 	worldTransform_.Initialize();
-	worldTransform_.translation_ = {30,2,50};
+	worldTransform_.translation_ = { 30,2,50 };
 }
 
 void Enemy::Update() {
@@ -27,8 +29,6 @@ void Enemy::Update() {
 	Rotate();
 	Move();
 
-	worldTransform_.Transform();
-
 	//キャラクター攻撃処理
 	for (std::unique_ptr<EnemyBullet>& bullet : bullets_) {
 		bullet->Update();
@@ -39,7 +39,7 @@ void Enemy::Update() {
 		, worldTransform_.translation_.y, worldTransform_.translation_.z);
 }
 
-void Enemy::InitializeApproach(){
+void Enemy::InitializeApproach() {
 	//発射タイマー
 	fireTimer_ = kFireInterval;
 }
@@ -77,21 +77,33 @@ void Enemy::Rotate() {
 }
 
 void Enemy::Fire() {
-		//弾の速度
-		const float kBulletSpeed = -1.0f;
-		Vector3 velocity(0, 0, kBulletSpeed);
+	assert(player_);
 
-		//弾を生成し、初期化
-		std::unique_ptr<EnemyBullet>newBullet = std::make_unique<EnemyBullet>();
-		newBullet->Initialize(model_, worldTransform_.translation_, velocity);
+	//弾の速度
+	const float kBulletSpeed = 1.0f;
 
-		//弾を登録する
-		bullets_.push_back(std::move(newBullet));
+	//自キャラの座標を取得
+	Vector3 playerPos = player_->GetWorldPosition();
+	//敵の座標を取得
+	Vector3 enemyPos = GetWorldPosition();
+	//差分ベクトルを計算
+	Vector3 velocity = playerPos - enemyPos;
+	//ベクトルを正規化
+	MathUtility::Vector3Normalize(velocity);
+	//ベクトルの長さを、速さに合わせる
+	velocity *= kBulletSpeed;
+	//弾を生成し、初期化
+	std::unique_ptr<EnemyBullet>newBullet = std::make_unique<EnemyBullet>();
+	newBullet->Initialize(model_, worldTransform_.translation_, velocity);
+
+	//弾を登録する
+	bullets_.push_back(std::move(newBullet));
 }
 
-void Enemy::Approach(){
+void Enemy::Approach() {
 	//移動(ベクトルを加算)
 	worldTransform_.translation_ += Vector3(0, 0, -0.25f);
+	worldTransform_.Transform();
 	//規定の位置に到達したら離脱
 	if (worldTransform_.translation_.z < 0.0f) {
 		phase_ = Phase::Leave;
@@ -108,7 +120,21 @@ void Enemy::Approach(){
 	}
 }
 
-void Enemy::Leave(){
+void Enemy::Leave() {
 	//移動(ベクトルを加算)
 	worldTransform_.translation_ += Vector3(-0.1f, 0.1f, -0.1f);
+	worldTransform_.Transform();
+}
+
+Vector3 Enemy::GetWorldPosition()
+{
+	Vector3 worldPos;
+	worldPos.x = worldTransform_.matWorld_.m[3][0];
+	worldPos.y = worldTransform_.matWorld_.m[3][1];
+	worldPos.z = worldTransform_.matWorld_.m[3][2];
+	return worldPos;
+}
+
+void Enemy::OnCollision()
+{
 }

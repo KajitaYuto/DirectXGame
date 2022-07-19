@@ -62,7 +62,7 @@ class GameScene {
 	Model* model_ = nullptr;
 
 	//自キャラ
-	std::unique_ptr<Player> player_ = nullptr;
+	Player *player_ = nullptr;
 
 	//敵キャラ
 	std::unique_ptr<Enemy> enemy_ = nullptr;
@@ -79,4 +79,9 @@ class GameScene {
 	/// <summary>
 	/// ゲームシーン用
 	/// </summary>
+
+	/// <summary>
+	/// 衝突判定と応答
+	/// </summary>
+	void CheckAllCollisions();
 };

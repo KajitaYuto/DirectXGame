@@ -24,6 +24,13 @@ public:
 	/// •`‰æ
 	/// </summary>
 	void Draw(ViewProjection viewProjection);
+
+	//ƒ[ƒ‹ƒhÀ•W‚ğæ“¾
+	Vector3 GetWorldPosition();
+
+	void OnCollision();
+
+	const std::list<std::unique_ptr<PlayerBullet>>& GetBullet() { return bullets_; }
 	
 private:
 

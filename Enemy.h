@@ -14,6 +14,8 @@ enum class Phase {
 	Leave,		//離脱する
 };
 
+class Player;
+
 class Enemy {
 public:
 	/// <summary>
@@ -29,13 +31,21 @@ public:
 	//接近フェーズ初期化関数
 	void InitializeApproach();
 	//発射間隔
-	static const int kFireInterval = 60;
+	static const int kFireInterval = 10;
 
 	/// <summary>
 	/// 描画
 	/// </summary>
 	void Draw(ViewProjection viewProjection);
 
+	void SetPlayer(Player* player) { player_ = player; }
+
+	//ワールド座標を取得
+	Vector3 GetWorldPosition();
+
+	void OnCollision();
+
+	const std::list<std::unique_ptr<EnemyBullet>>& GetBullet() { return bullets_; }
 private:
 
 	/// <summary>
@@ -58,6 +68,8 @@ private:
 
 	Input* input_ = nullptr;
 	DebugText* debugText_ = nullptr;
+
+	Player* player_ = nullptr;
 
 	//ワールド変換データ
 	WorldTransform worldTransform_;

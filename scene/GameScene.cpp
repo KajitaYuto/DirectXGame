@@ -24,7 +24,7 @@ void GameScene::Initialize() {
 	model_ = Model::Create();
 
 	//自キャラの生成
-	player_ = std::make_unique<Player>();
+	player_ =new Player;
 	//自キャラの初期化
 	player_->Initialize(model_,pTextureHandle_);
 
@@ -32,6 +32,8 @@ void GameScene::Initialize() {
 	enemy_ = std::make_unique<Enemy>();
 	//敵キャラの初期化
 	enemy_->Initialize(model_, eTextureHandle_);
+	//敵キャラに自キャラのアドレスを渡す
+	enemy_->SetPlayer(player_);
 
 	//デバッグカメラの生成
 	debugCamera_ = new DebugCamera(1280, 720);
@@ -83,6 +85,8 @@ void GameScene::Update() {
 	//キャラの更新
 	player_->Update();
 	if (enemy_ != nullptr)enemy_->Update();
+
+	CheckAllCollisions();
 }
 
 void GameScene::Draw() {
@@ -135,5 +139,25 @@ void GameScene::Draw() {
 	// スプライト描画後処理
 	Sprite::PostDraw();
 
+#pragma endregion
+}
+
+void GameScene::CheckAllCollisions()
+{
+	//判定対象AとBの座標
+	Vector3 posA, posB;
+
+	//自弾リストの取得
+	const std::list<std::unique_ptr<PlayerBullet>>& playerBullets = player_->GetBullet();
+	//敵弾リストの取得
+	const std::list<std::unique_ptr<EnemyBullet>>& playerBullets = enemy_->GetBullet();
+
+#pragma region 自キャラと敵弾の当たり判定
+#pragma endregion
+
+#pragma region 自弾と敵キャラの当たり判定
+#pragma endregion
+
+#pragma region 自弾と敵弾の当たり判定
 #pragma endregion
 }

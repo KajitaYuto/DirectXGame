@@ -22,6 +22,10 @@ public:
 	void Draw(const ViewProjection& viewProjection);
 
 	bool IsDead()const { return isDead_; }
+
+	void OnCollision();
+
+	Vector3 GetWorldPosition();
 private:
 	//ワールド変換データ
 	WorldTransform worldTransform_;
