@@ -46,6 +46,8 @@ public:
 	void OnCollision();
 
 	const std::list<std::unique_ptr<EnemyBullet>>& GetBullet() { return bullets_; }
+
+	static const int kRadius = 1;
 private:
 
 	/// <summary>

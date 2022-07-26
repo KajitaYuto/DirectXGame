@@ -28,6 +28,8 @@ public:
 	void OnCollision();
 
 	Vector3 GetWorldPosition();
+
+	static const int kRadius = 1;
 private:
 	//ワールド変換データ
 	WorldTransform worldTransform_;

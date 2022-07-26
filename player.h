@@ -32,6 +32,7 @@ public:
 
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullet() { return bullets_; }
 	
+	static const int kRadius = 1;
 private:
 
 	/// <summary>
