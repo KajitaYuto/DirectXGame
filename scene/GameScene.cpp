@@ -8,6 +8,7 @@ GameScene::GameScene() {}
 
 GameScene::~GameScene() {
 	delete debugCamera_;
+	delete modelSkydome_;
 }
 
 void GameScene::Initialize() {
@@ -22,11 +23,17 @@ void GameScene::Initialize() {
 	eTextureHandle_ = TextureManager::Load("bakuhatsu4.png");
 	// 3Dモデルの生成
 	model_ = Model::Create();
+	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 
 	//自キャラの生成
 	player_ = new Player;
 	//自キャラの初期化
 	player_->Initialize(model_, pTextureHandle_);
+
+	//天球の生成
+	skydome_ = new Skydome;
+	//天球の初期化
+	skydome_->Initialize(modelSkydome_);
 
 	//敵キャラの生成
 	enemy_ = std::make_unique<Enemy>();
@@ -86,6 +93,9 @@ void GameScene::Update() {
 	player_->Update();
 	if (enemy_ != nullptr)enemy_->Update();
 
+	//天球の更新
+	skydome_->Update();
+
 	CheckAllCollisions();
 }
 
@@ -118,6 +128,7 @@ void GameScene::Draw() {
 	//3Dモデル描画
 	player_->Draw(viewProjection_);
 	if (enemy_ != nullptr)enemy_->Draw(viewProjection_);
+	skydome_->Draw(viewProjection_);
 
 	////ライン描画が参照するビュープロジェクションを指定する(アドレス渡し)
 	//PrimitiveDrawer::GetInstance()->DrawLine3d();

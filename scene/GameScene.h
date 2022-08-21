@@ -12,6 +12,7 @@
 #include "DebugCamera.h"
 #include "Player.h"
 #include "Enemy.h"
+#include "Skydome.h"
 
 /// <summary>
 /// ゲームシーン
@@ -60,12 +61,16 @@ class GameScene {
 
 	//3Dモデル
 	Model* model_ = nullptr;
+	Model* modelSkydome_ = nullptr;
 
 	//自キャラ
 	Player *player_ = nullptr;
 
 	//敵キャラ
 	std::unique_ptr<Enemy> enemy_ = nullptr;
+
+	//天球
+	Skydome* skydome_ = nullptr;
 	
 	//ビュープロジェクション
 	ViewProjection viewProjection_;
