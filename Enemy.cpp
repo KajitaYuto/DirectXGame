@@ -1,8 +1,9 @@
 #include "Enemy.h"
 #include "Player.h"
+#include "GameScene.h"
 using namespace MathUtility;
 
-void Enemy::Initialize(Model* model, uint32_t textureHandle) {
+void Enemy::Initialize(Model* model,Vector3& position, uint32_t textureHandle) {
 	//NULLポインタチェック
 	assert(model);
 	model_ = model;
@@ -15,24 +16,14 @@ void Enemy::Initialize(Model* model, uint32_t textureHandle) {
 
 	//ワールド変換の初期化
 	worldTransform_.Initialize();
-	worldTransform_.translation_ = { 30,2,50 };
+	worldTransform_.translation_ = position;
 }
 
 void Enemy::Update() {
-	//デスフラグの立った弾を削除
-	bullets_.remove_if([](std::unique_ptr<EnemyBullet>& bullet) {
-		return bullet->IsDead();
-		});
-
 	//ワールド行列
 	worldTransform_.matWorld_ = MathUtility::Matrix4Identity();
 	Rotate();
 	Move();
-
-	//キャラクター攻撃処理
-	for (std::unique_ptr<EnemyBullet>& bullet : bullets_) {
-		bullet->Update();
-	}
 
 	debugText_->SetPos(50, 90);
 	debugText_->Printf("Enemy:(%f,%f,%f)", worldTransform_.translation_.x
@@ -47,10 +38,6 @@ void Enemy::InitializeApproach() {
 void Enemy::Draw(ViewProjection viewProjection) {
 	//3Dモデルの描画
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
-	//弾描画
-	for (std::unique_ptr<EnemyBullet>& bullet : bullets_) {
-		bullet->Draw(viewProjection);
-	}
 }
 
 void Enemy::Move() {
@@ -97,7 +84,7 @@ void Enemy::Fire() {
 	newBullet->Initialize(model_, worldTransform_.translation_, velocity);
 
 	//弾を登録する
-	bullets_.push_back(std::move(newBullet));
+	gameScene_->AddEnemyBullet(std::move(newBullet));
 }
 
 void Enemy::Approach() {
@@ -135,6 +122,6 @@ Vector3 Enemy::GetWorldPosition()
 	return worldPos;
 }
 
-void Enemy::OnCollision()
-{
+void Enemy::OnCollision(){
+	isDead_ = true;
 }

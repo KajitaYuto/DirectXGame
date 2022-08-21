@@ -15,13 +15,14 @@ enum class Phase {
 };
 
 class Player;
+class GameScene;
 
 class Enemy {
 public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(Model* model, uint32_t textureHandle);
+	void Initialize(Model* model,Vector3& position, uint32_t textureHandle);
 
 	/// <summary>
 	/// 更新
@@ -39,13 +40,13 @@ public:
 	void Draw(ViewProjection viewProjection);
 
 	void SetPlayer(Player* player) { player_ = player; }
+	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
 
 	//ワールド座標を取得
 	Vector3 GetWorldPosition();
 
 	void OnCollision();
-
-	const std::list<std::unique_ptr<EnemyBullet>>& GetBullet() { return bullets_; }
+	bool IsDead() const { return isDead_; }
 
 	static const int kRadius = 1;
 private:
@@ -66,12 +67,11 @@ private:
 	void Approach();
 	void Leave();
 
-	std::list<std::unique_ptr<EnemyBullet>> bullets_;
-
 	Input* input_ = nullptr;
 	DebugText* debugText_ = nullptr;
 
 	Player* player_ = nullptr;
+	GameScene* gameScene_ = nullptr;
 
 	//ワールド変換データ
 	WorldTransform worldTransform_;
@@ -83,4 +83,6 @@ private:
 	Phase phase_ = Phase::Approach;
 	//発射タイマー
 	int32_t fireTimer_ = 0;
+	//デスフラグ
+	bool isDead_ = false;
 };

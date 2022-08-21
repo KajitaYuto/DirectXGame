@@ -13,13 +13,14 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Skydome.h"
+#include <sstream>
 
 /// <summary>
 /// ゲームシーン
 /// </summary>
 class GameScene {
 
-  public: // メンバ関数
+public: // メンバ関数
 	/// <summary>
 	/// コンストクラタ
 	/// </summary>
@@ -45,12 +46,17 @@ class GameScene {
 	/// </summary>
 	void Draw();
 
-  private: // メンバ変数
+	/// <summary>
+	/// 敵弾を追加する
+	/// </summary>
+	void AddEnemyBullet(std::unique_ptr<EnemyBullet>enemyBullet);
+
+private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
 	Audio* audio_ = nullptr;
 	DebugText* debugText_ = nullptr;
-	
+
 	/// <summary>
 	/// ゲームシーン用
 	/// </summary>
@@ -64,14 +70,17 @@ class GameScene {
 	Model* modelSkydome_ = nullptr;
 
 	//自キャラ
-	Player *player_ = nullptr;
+	Player* player_ = nullptr;
 
 	//敵キャラ
-	std::unique_ptr<Enemy> enemy_ = nullptr;
+	//std::unique_ptr<Enemy> enemys_ = nullptr;
+	std::list<std::unique_ptr<Enemy>> enemys_;
+	//敵弾
+	std::list<std::unique_ptr<EnemyBullet>> enemyBullets_;
 
 	//天球
 	Skydome* skydome_ = nullptr;
-	
+
 	//ビュープロジェクション
 	ViewProjection viewProjection_;
 
@@ -81,6 +90,13 @@ class GameScene {
 	//デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
 
+	//敵発生コマンド
+	std::stringstream enemyPopCommands;
+
+	//待機中フラグ
+	bool isWait_ = false;
+	int waitTimer_ = 0;
+
 	/// <summary>
 	/// ゲームシーン用
 	/// </summary>
@@ -89,4 +105,19 @@ class GameScene {
 	/// 衝突判定と応答
 	/// </summary>
 	void CheckAllCollisions();
+
+	/// <summary>
+	/// 敵発生データの読み込み
+	/// </summary>
+	void LoadEnemyPopData();
+
+	/// <summary>
+	/// 敵発生関数
+	/// </summary>
+	void PopEnemy(Vector3 position);
+
+	/// <summary>
+	/// 敵発生コマンドの更新
+	/// </summary>
+	void UpdateEnemyPopCommands();
 };
