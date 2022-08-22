@@ -1,6 +1,6 @@
 #include "PlayerBullet.h"
 
-void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vector3& velocity) {
+void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vector3& rotation, const Vector3& velocity) {
 	//NULLポインタチェック
 	assert(model);
 	model_ = model;
@@ -8,6 +8,7 @@ void PlayerBullet::Initialize(Model* model, const Vector3& position, const Vecto
 	textureHandle_ = TextureManager::Load("black.jpg");
 
 	//ワールド変換の初期化
+	worldTransform_.rotation_ = rotation;
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = position;
 }
@@ -37,9 +38,9 @@ Vector3 PlayerBullet::GetWorldPosition()
 {
 	Vector3 worldPos;
 
-	worldPos.x = worldTransform_.translation_.x;
-	worldPos.y = worldTransform_.translation_.y;
-	worldPos.z = worldTransform_.translation_.z;
+	worldPos.x = worldTransform_.matWorld_.m[3][0];
+	worldPos.y = worldTransform_.matWorld_.m[3][1];
+	worldPos.z = worldTransform_.matWorld_.m[3][2];
 
 	return worldPos;
 }

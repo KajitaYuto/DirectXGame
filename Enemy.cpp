@@ -24,10 +24,6 @@ void Enemy::Update() {
 	worldTransform_.matWorld_ = MathUtility::Matrix4Identity();
 	Rotate();
 	Move();
-
-	debugText_->SetPos(50, 90);
-	debugText_->Printf("Enemy:(%f,%f,%f)", worldTransform_.translation_.x
-		, worldTransform_.translation_.y, worldTransform_.translation_.z);
 }
 
 void Enemy::InitializeApproach() {
@@ -81,7 +77,7 @@ void Enemy::Fire() {
 	velocity *= kBulletSpeed;
 	//’e‚ğ¶¬‚µA‰Šú‰»
 	std::unique_ptr<EnemyBullet>newBullet = std::make_unique<EnemyBullet>();
-	newBullet->Initialize(model_, worldTransform_.translation_, velocity);
+	newBullet->Initialize(model_, GetWorldPosition(), velocity);
 
 	//’e‚ğ“o˜^‚·‚é
 	gameScene_->AddEnemyBullet(std::move(newBullet));

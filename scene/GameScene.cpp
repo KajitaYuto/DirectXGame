@@ -24,6 +24,8 @@ void GameScene::Initialize() {
 	eTextureHandle_ = TextureManager::Load("bakuhatsu4.png");
 	// 3Dモデルの生成
 	model_ = Model::Create();
+	modelPlayer_= Model::CreateFromOBJ("player", true);
+	modelPlayerBullet_ = Model::CreateFromOBJ("playerBullet", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 
 	//スクリプトの読み込み
@@ -32,7 +34,7 @@ void GameScene::Initialize() {
 	//自キャラの生成
 	player_ = new Player;
 	//自キャラの初期化
-	player_->Initialize(model_, pTextureHandle_);
+	player_->Initialize(modelPlayer_,modelPlayerBullet_);
 
 	//天球の生成
 	skydome_ = new Skydome;
@@ -43,12 +45,19 @@ void GameScene::Initialize() {
 	debugCamera_ = new DebugCamera(1280, 720);
 
 	//ビュープロジェクションの初期化
-	viewProjection_.Initialize();
+	//viewProjection_.Initialize();
+
+	//レールカメラの生成
+	railCamera_ = new RailCamera();
+	//レールカメラの初期化
+	railCamera_->Initialize();
+	//プレイヤーの親を設定
+	player_->SetParent(railCamera_->GetWorldTransform());
 
 	//軸方向表示の表示を有効にする
-	AxisIndicator::GetInstance()->SetVisible(true);
+	AxisIndicator::GetInstance()->SetVisible(false);
 	//軸方向表示が参照するビュープロジェクションを指定する(アドレス渡し)
-	AxisIndicator::GetInstance()->SetTargetViewProjection(&viewProjection_);
+	AxisIndicator::GetInstance()->SetTargetViewProjection(&railCamera_->GetViewProjection());
 }
 
 void GameScene::Update() {
@@ -59,31 +68,13 @@ void GameScene::Update() {
 	const float kEyeSpeed = 0.2f;
 
 	//視点移動(ベクトルの加算)
-	viewProjection_.eye += move;
+	railCamera_->GetViewProjection().eye += move;
 
 #ifdef _DEBUG
 	if (input_->TriggerKey(DIK_P)) {
 		isDebugCameraActive_ = !isDebugCameraActive_;
 	}
-	//デバッグ用表示
-	debugText_->SetPos(50, 50);
-	debugText_->Printf("eye:(%f,%f,%f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
 #endif
-
-	//カメラの処理
-	if (isDebugCameraActive_) {
-		debugCamera_->Update();
-		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
-		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
-		//転送
-		viewProjection_.TransferMatrix();
-	}
-	else {
-		//行列の再計算
-		viewProjection_.UpdateMatrix();
-		//転送
-		viewProjection_.TransferMatrix();
-	}
 
 	//スクリプトの更新
 	UpdateEnemyPopCommands();
@@ -108,6 +99,28 @@ void GameScene::Update() {
 
 	//天球の更新
 	skydome_->Update();
+
+	//レールカメラの更新
+	railCamera_->Update();
+
+	//カメラの処理
+	if (isDebugCameraActive_) {
+		debugCamera_->Update();
+		railCamera_->GetViewProjection().matView = debugCamera_->GetViewProjection().matView;
+		railCamera_->GetViewProjection().matProjection = debugCamera_->GetViewProjection().matProjection;
+		//転送
+		railCamera_->GetViewProjection().TransferMatrix();
+		//デバッグ用表示
+		debugText_->SetPos(50, 50);
+		debugText_->Printf("eye:(%f,%f,%f)", railCamera_->GetViewProjection().eye.x, railCamera_->GetViewProjection().eye.y, railCamera_->GetViewProjection().eye.z);
+		AxisIndicator::GetInstance()->SetVisible(true);
+	}
+	else {
+		//行列の再計算
+		railCamera_->GetViewProjection().UpdateMatrix();
+		//転送
+		railCamera_->GetViewProjection().TransferMatrix();
+	}
 
 	CheckAllCollisions();
 }
@@ -139,15 +152,15 @@ void GameScene::Draw() {
 	/// ここに3Dオブジェクトの描画処理を追加できる
 	/// </summary>
 	//3Dモデル描画
-	player_->Draw(viewProjection_);
+	player_->Draw(railCamera_->GetViewProjection());
 	for (std::unique_ptr<Enemy>& enemy : enemys_) {
-		enemy->Draw(viewProjection_);
+		enemy->Draw(railCamera_->GetViewProjection());
 	}
 	for (std::unique_ptr<EnemyBullet>& bullet : enemyBullets_) {
-		bullet->Draw(viewProjection_);
+		bullet->Draw(railCamera_->GetViewProjection());
 	}
 
-	skydome_->Draw(viewProjection_);
+	skydome_->Draw(railCamera_->GetViewProjection());
 
 	////ライン描画が参照するビュープロジェクションを指定する(アドレス渡し)
 	//PrimitiveDrawer::GetInstance()->DrawLine3d();

@@ -36,6 +36,7 @@ void WorldTransform::Transform(){
 	matWorld_ *= matRotX;
 	matWorld_ *= matRotY;
 	matWorld_ *= matTrans;
+	if (parent_ != nullptr)matWorld_ *= parent_->matWorld_;
 	//ƒ[ƒ‹ƒhs—ñ‚Ì“]‘—
 	TransferMatrix();
 }

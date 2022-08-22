@@ -13,7 +13,7 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(Model* model, uint32_t textureHandle);
+	void Initialize(Model* modelPlayer,Model* modelBullet);
 
 	/// <summary>
 	/// 更新
@@ -27,6 +27,9 @@ public:
 
 	//ワールド座標を取得
 	Vector3 GetWorldPosition();
+	Vector3 GetWorldRotation();
+
+	void SetParent(WorldTransform* parent) { worldTransform_.parent_ = parent; }
 
 	void OnCollision();
 
@@ -57,6 +60,5 @@ private:
 	WorldTransform worldTransform_;
 	//モデル
 	Model* model_ = nullptr;
-	//テクスチャハンドル
-	uint32_t textureHandle_ = 0u;
+	Model* modelBullet_ = nullptr;
 };

@@ -1,15 +1,17 @@
 #include "Player.h"
 
-void Player::Initialize(Model* model, uint32_t textureHandle) {
+void Player::Initialize(Model* modelPlayer, Model* modelBullet) {
 	//NULLポインタチェック
-	assert(model);
-	model_ = model;
-	textureHandle_ = textureHandle;
+	assert(modelPlayer);
+	model_ = modelPlayer;
+	assert(modelBullet);
+	this->modelBullet_ = modelBullet;
 
 	//シングルトンインスタンスを取得する
 	input_ = Input::GetInstance();
 	debugText_ = DebugText::GetInstance();
 
+	worldTransform_.translation_ = Vector3(0.0f, 0.0f, 50.0f);
 	//ワールド変換の初期化
 	worldTransform_.Initialize();
 }
@@ -33,14 +35,16 @@ void Player::Update() {
 		bullet->Update();
 	}
 
+#ifdef _DEBUG
 	debugText_->SetPos(50, 70);
 	debugText_->Printf("Player:(%f,%f,%f)", worldTransform_.translation_.x
 		, worldTransform_.translation_.y, worldTransform_.translation_.z);
+#endif
 }
 
 void Player::Draw(ViewProjection viewProjection) {
 	//3Dモデルの描画
-	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+	model_->Draw(worldTransform_, viewProjection);
 	//弾描画
 	for (std::unique_ptr<PlayerBullet>& bullet : bullets_) {
 		bullet->Draw(viewProjection);
@@ -54,6 +58,15 @@ Vector3 Player::GetWorldPosition()
 	worldPos.y=worldTransform_.matWorld_.m[3][1];
 	worldPos.z=worldTransform_.matWorld_.m[3][2];
 	return worldPos;
+}
+
+Vector3 Player::GetWorldRotation()
+{
+	Vector3 worldRota;
+	worldRota.x = worldTransform_.rotation_.x;
+	worldRota.y = worldTransform_.rotation_.y;
+	worldRota.z = worldTransform_.rotation_.z;
+	return worldRota;
 }
 
 void Player::OnCollision()
@@ -100,9 +113,9 @@ void Player::Rotate() {
 }
 
 void Player::Attack() {
-	if (input_->TriggerKey(DIK_SPACE)) {
+	if (input_->PushKey(DIK_SPACE)) {
 		//弾の速度
-		const float kBulletSpeed = 1.0f;
+		const float kBulletSpeed = 2.0f;
 		Vector3 velocity(0, 0, kBulletSpeed);
 
 		//速度ベクトルを自機の向きに合わせて回転させる
@@ -110,7 +123,7 @@ void Player::Attack() {
 
 		//弾を生成し、初期化
 		std::unique_ptr<PlayerBullet>newBullet = std::make_unique<PlayerBullet>();
-		newBullet->Initialize(model_, worldTransform_.translation_,velocity);
+		newBullet->Initialize(modelBullet_,GetWorldPosition(),GetWorldRotation(), velocity);
 
 		//弾を登録する
 		bullets_.push_back(std::move(newBullet));

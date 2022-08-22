@@ -13,6 +13,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "Skydome.h"
+#include "RailCamera.h"
 #include <sstream>
 
 /// <summary>
@@ -67,6 +68,8 @@ private: // メンバ変数
 
 	//3Dモデル
 	Model* model_ = nullptr;
+	Model* modelPlayer_ = nullptr;
+	Model* modelPlayerBullet_ = nullptr;
 	Model* modelSkydome_ = nullptr;
 
 	//自キャラ
@@ -89,6 +92,9 @@ private: // メンバ変数
 
 	//デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
+
+	//レールカメラ
+	RailCamera* railCamera_ = nullptr;
 
 	//敵発生コマンド
 	std::stringstream enemyPopCommands;
