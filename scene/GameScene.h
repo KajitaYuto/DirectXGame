@@ -52,31 +52,37 @@ public: // メンバ関数
 	/// </summary>
 	void AddEnemyBullet(std::unique_ptr<EnemyBullet>enemyBullet);
 
+	int* GetTotalKill() { return &totalKill_;}
+	int* GetTotalDamage() {return &totalDamage_;}
+
+	void SetScene(int* scene) { sceneNum_ = scene; }
+
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
 	Audio* audio_ = nullptr;
 	DebugText* debugText_ = nullptr;
 
+
 	/// <summary>
 	/// ゲームシーン用
 	/// </summary>
-
-	//テクスチャハンドル
-	uint32_t pTextureHandle_ = 0;
-	uint32_t eTextureHandle_ = 0;
+	 
+	//BGM
+	uint32_t BGMHandle_ = 0;
+	uint32_t roop_ = 0;
 
 	//3Dモデル
-	Model* model_ = nullptr;
 	Model* modelPlayer_ = nullptr;
 	Model* modelPlayerBullet_ = nullptr;
+	Model* modelEnemy_ = nullptr;
+	Model* modelEnemyBullet_ = nullptr;
 	Model* modelSkydome_ = nullptr;
 
 	//自キャラ
 	Player* player_ = nullptr;
 
 	//敵キャラ
-	//std::unique_ptr<Enemy> enemys_ = nullptr;
 	std::list<std::unique_ptr<Enemy>> enemys_;
 	//敵弾
 	std::list<std::unique_ptr<EnemyBullet>> enemyBullets_;
@@ -102,6 +108,13 @@ private: // メンバ変数
 	//待機中フラグ
 	bool isWait_ = false;
 	int waitTimer_ = 0;
+	bool isLast_ = false;
+
+	//リザルト用
+	int totalKill_ = 0;
+	int totalDamage_ = 0;
+
+	int* sceneNum_=nullptr;
 
 	/// <summary>
 	/// ゲームシーン用
@@ -120,7 +133,7 @@ private: // メンバ変数
 	/// <summary>
 	/// 敵発生関数
 	/// </summary>
-	void PopEnemy(Vector3 position);
+	void PopEnemy(Vector3 position, int Destination);
 
 	/// <summary>
 	/// 敵発生コマンドの更新

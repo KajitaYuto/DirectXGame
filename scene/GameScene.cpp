@@ -10,9 +10,18 @@ GameScene::GameScene() {}
 GameScene::~GameScene() {
 	delete debugCamera_;
 	delete modelSkydome_;
+	audio_->StopWave(roop_);
 }
 
 void GameScene::Initialize() {
+
+	//待機中フラグ
+	isWait_ = false;
+	waitTimer_ = 0;
+
+	//リザルト用
+	totalKill_ = 0;
+	totalDamage_ = 0;
 
 	dxCommon_ = DirectXCommon::GetInstance();
 	input_ = Input::GetInstance();
@@ -20,12 +29,16 @@ void GameScene::Initialize() {
 	debugText_ = DebugText::GetInstance();
 
 	// ファイル名を指定してテクスチャを読み込み
-	pTextureHandle_ = TextureManager::Load("mario.jpg");
-	eTextureHandle_ = TextureManager::Load("bakuhatsu4.png");
+	TextureManager::Load("player/HPGauge/HPGauge.png");
+
+	//BGMの読み込み
+	BGMHandle_ = audio_->LoadWave("sound/BGM.wav");
+
 	// 3Dモデルの生成
-	model_ = Model::Create();
-	modelPlayer_= Model::CreateFromOBJ("player", true);
+	modelPlayer_ = Model::CreateFromOBJ("player", true);
 	modelPlayerBullet_ = Model::CreateFromOBJ("playerBullet", true);
+	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
+	modelEnemyBullet_ = Model::CreateFromOBJ("enemyBullet", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 
 	//スクリプトの読み込み
@@ -34,7 +47,8 @@ void GameScene::Initialize() {
 	//自キャラの生成
 	player_ = new Player;
 	//自キャラの初期化
-	player_->Initialize(modelPlayer_,modelPlayerBullet_);
+	player_->Initialize(modelPlayer_, modelPlayerBullet_);
+	player_->SetTotalDamage(&totalDamage_);
 
 	//天球の生成
 	skydome_ = new Skydome;
@@ -58,9 +72,13 @@ void GameScene::Initialize() {
 	AxisIndicator::GetInstance()->SetVisible(false);
 	//軸方向表示が参照するビュープロジェクションを指定する(アドレス渡し)
 	AxisIndicator::GetInstance()->SetTargetViewProjection(&railCamera_->GetViewProjection());
+
+	roop_ = audio_->PlayWave(BGMHandle_, true, 0.1f);
 }
 
 void GameScene::Update() {
+
+	debugText_->SetScale(1.0f);
 	//視点の移動ベクトル
 	Vector3 move = { 0,0,0 };
 
@@ -78,10 +96,15 @@ void GameScene::Update() {
 
 	//スクリプトの更新
 	UpdateEnemyPopCommands();
-	
+
+	//レールカメラの更新
+	railCamera_->Update();
 	//キャラの更新
 	player_->Update();
 	//デスフラグの立った敵を削除
+	for (std::unique_ptr<Enemy>& enemy : enemys_) {
+		if (enemy->IsDead())totalKill_++;
+	}
 	enemys_.remove_if([](std::unique_ptr<Enemy>& enemy) {
 		return enemy->IsDead();
 		});
@@ -100,8 +123,7 @@ void GameScene::Update() {
 	//天球の更新
 	skydome_->Update();
 
-	//レールカメラの更新
-	railCamera_->Update();
+
 
 	//カメラの処理
 	if (isDebugCameraActive_) {
@@ -112,7 +134,7 @@ void GameScene::Update() {
 		railCamera_->GetViewProjection().TransferMatrix();
 		//デバッグ用表示
 		debugText_->SetPos(50, 50);
-		debugText_->Printf("eye:(%f,%f,%f)", railCamera_->GetViewProjection().eye.x, railCamera_->GetViewProjection().eye.y, railCamera_->GetViewProjection().eye.z);
+		debugText_->Printf("kill:%d, damage:%d, scene:%d", *GetTotalKill(), totalDamage_, *sceneNum_);
 		AxisIndicator::GetInstance()->SetVisible(true);
 	}
 	else {
@@ -120,9 +142,15 @@ void GameScene::Update() {
 		railCamera_->GetViewProjection().UpdateMatrix();
 		//転送
 		railCamera_->GetViewProjection().TransferMatrix();
+		AxisIndicator::GetInstance()->SetVisible(false);
 	}
 
 	CheckAllCollisions();
+
+	if (player_->IsDead()) {
+		audio_->StopWave(roop_);
+		*sceneNum_ = 2;
+	}
 }
 
 void GameScene::Draw() {
@@ -175,6 +203,7 @@ void GameScene::Draw() {
 	/// <summary>
 	/// ここに前景スプライトの描画処理を追加できる
 	/// </summary>
+	player_->DrawUI();
 
 	// デバッグテキストの描画
 	debugText_->DrawAll(commandList);
@@ -245,7 +274,7 @@ void GameScene::CheckAllCollisions()
 			}
 		}
 	}
-	
+
 #pragma endregion
 
 #pragma region 自弾と敵弾の当たり判定
@@ -278,7 +307,7 @@ void GameScene::CheckAllCollisions()
 #pragma endregion
 }
 
-void GameScene::LoadEnemyPopData(){
+void GameScene::LoadEnemyPopData() {
 	std::ifstream file;
 	file.open("Resources/enemyPop.csv");
 	assert(file.is_open());
@@ -288,11 +317,11 @@ void GameScene::LoadEnemyPopData(){
 	file.close();
 }
 
-void GameScene::PopEnemy(Vector3 position){
+void GameScene::PopEnemy(Vector3 position, int Destination) {
 	//敵キャラの生成
 	std::unique_ptr<Enemy>newEnemy = std::make_unique<Enemy>();
 	//敵キャラの初期化
-	newEnemy->Initialize(model_,position, eTextureHandle_);
+	newEnemy->Initialize(modelEnemy_, modelEnemyBullet_, position, Destination);
 	//敵キャラに自キャラのアドレスを渡す
 	newEnemy->SetPlayer(player_);
 	//敵キャラにゲームシーンのアドレスを渡す
@@ -301,10 +330,16 @@ void GameScene::PopEnemy(Vector3 position){
 	enemys_.push_back(std::move(newEnemy));
 }
 
-void GameScene::UpdateEnemyPopCommands(){
+void GameScene::UpdateEnemyPopCommands() {
 	if (isWait_) {
 		waitTimer_--;
-		if (waitTimer_ <= 0)isWait_ = false;
+		if (waitTimer_ <= 0) {
+			if (!isLast_)isWait_ = false;
+			else {
+				*sceneNum_ = 2;
+				audio_->StopWave(roop_);
+			}
+		}
 		return;
 	}
 
@@ -314,7 +349,7 @@ void GameScene::UpdateEnemyPopCommands(){
 		std::istringstream line_stream(line);
 		std::string word;
 		getline(line_stream, word, ',');
-		
+
 		if (word.find("//") == 0) {
 			continue;
 		}
@@ -329,7 +364,10 @@ void GameScene::UpdateEnemyPopCommands(){
 			getline(line_stream, word, ',');
 			float z = (float)std::atof(word.c_str());
 
-			PopEnemy(Vector3(x,y,z));
+			getline(line_stream, word, ',');
+			int flag = (float)std::atof(word.c_str());
+
+			PopEnemy(Vector3(x, y, z), flag);
 		}
 		else if (word.find("WAIT") == 0) {
 			getline(line_stream, word, ',');
@@ -338,6 +376,17 @@ void GameScene::UpdateEnemyPopCommands(){
 
 			isWait_ = true;
 			waitTimer_ = waitTime;
+
+			break;
+		}
+		else if (word.find("LAST") == 0) {
+			getline(line_stream, word, ',');
+
+			int32_t waitTime = atoi(word.c_str());
+
+			isWait_ = true;
+			waitTimer_ = waitTime;
+			isLast_ = true;
 
 			break;
 		}

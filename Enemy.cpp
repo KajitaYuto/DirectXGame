@@ -3,23 +3,31 @@
 #include "GameScene.h"
 using namespace MathUtility;
 
-void Enemy::Initialize(Model* model,Vector3& position, uint32_t textureHandle) {
+void Enemy::Initialize(Model* model, Model* modelBullet,Vector3& position, int Destination) {
 	//NULLポインタチェック
 	assert(model);
 	model_ = model;
-	textureHandle_ = textureHandle;
+	assert(modelBullet);
+	modelBullet_ = modelBullet;
 
 	//シングルトンインスタンスを取得する
 	input_ = Input::GetInstance();
 	debugText_ = DebugText::GetInstance();
+	audio_ = Audio::GetInstance();
 
 
 	//ワールド変換の初期化
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = position;
+
+	//SE読み込み
+	damageSE_ = audio_->LoadWave("sound/hit.wav");
+
+	destination_ = Destination;
 }
 
 void Enemy::Update() {
+	if (hitTimer_ > 0)hitTimer_--;
 	//ワールド行列
 	worldTransform_.matWorld_ = MathUtility::Matrix4Identity();
 	Rotate();
@@ -33,7 +41,7 @@ void Enemy::InitializeApproach() {
 
 void Enemy::Draw(ViewProjection viewProjection) {
 	//3Dモデルの描画
-	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+	if(hitTimer_<=0)model_->Draw(worldTransform_, viewProjection);
 }
 
 void Enemy::Move() {
@@ -50,20 +58,13 @@ void Enemy::Move() {
 
 void Enemy::Rotate() {
 	const float kRotSpeed = 0.05f;
-
-	/*if (input_->PushKey(DIK_LEFT)) {
-		worldTransform_.rotation_.y -= kRotSpeed;
-	}
-	if (input_->PushKey(DIK_RIGHT)) {
-		worldTransform_.rotation_.y += kRotSpeed;
-	}*/
 }
 
 void Enemy::Fire() {
 	assert(player_);
 
 	//弾の速度
-	const float kBulletSpeed = 1.0f;
+	const float kBulletSpeed = 2.0f;
 
 	//自キャラの座標を取得
 	Vector3 playerPos = player_->GetWorldPosition();
@@ -77,7 +78,7 @@ void Enemy::Fire() {
 	velocity *= kBulletSpeed;
 	//弾を生成し、初期化
 	std::unique_ptr<EnemyBullet>newBullet = std::make_unique<EnemyBullet>();
-	newBullet->Initialize(model_, GetWorldPosition(), velocity);
+	newBullet->Initialize(modelBullet_, GetWorldPosition(), velocity);
 
 	//弾を登録する
 	gameScene_->AddEnemyBullet(std::move(newBullet));
@@ -104,8 +105,23 @@ void Enemy::Approach() {
 }
 
 void Enemy::Leave() {
+	Vector3 move;
+	switch (destination_) {
+	case 0:
+		move = Vector3(-0.5f, 0.5f, -0.5f);
+		break;
+	case 1:
+		move = Vector3(0.5f, 0.5f, -0.5f);
+		break;
+	case 2:
+		move = Vector3(-0.5f, -0.5f, -0.5f);
+		break;
+	case 3:
+		move = Vector3(0.5f, -0.5f, -0.5f);
+		break;
+	}
 	//移動(ベクトルを加算)
-	worldTransform_.translation_ += Vector3(-0.1f, 0.1f, -0.1f);
+	worldTransform_.translation_ +=move;
 	worldTransform_.Transform();
 }
 
@@ -119,5 +135,8 @@ Vector3 Enemy::GetWorldPosition()
 }
 
 void Enemy::OnCollision(){
-	isDead_ = true;
+	hitPoint_--;
+	audio_->PlayWave(damageSE_, false, 0.25f);
+	hitTimer_ = 2;
+	if(hitPoint_<=0)isDead_ = true;
 }
